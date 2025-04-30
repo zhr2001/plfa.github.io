@@ -891,6 +891,8 @@ is associative and commutative.
 
 ```agda
 -- Your code goes here
++-swap′ : ∀ (m n p : ℕ) -> (m + n) + p ≡ n + (m + p)
++-swap′ m n p rewrite +-comm′ m n rewrite +-assoc′ n m p = refl
 ```
 
 
@@ -904,6 +906,9 @@ for all naturals `m`, `n`, and `p`.
 
 ```agda
 -- Your code goes here
+*-distrib-+′ : ∀ (m n p : ℕ) -> (m + n) * p ≡ m * p + n * p
+*-distrib-+′ 0 n p = refl
+*-distrib-+′ (suc m) n p rewrite *-distrib-+′ m n p rewrite +-assoc′ p (m * p) (n * p) = refl
 ```
 
 
@@ -917,6 +922,9 @@ for all naturals `m`, `n`, and `p`.
 
 ```agda
 -- Your code goes here
+*-assoc′ : ∀ (m n p : ℕ) -> (m * n) * p ≡ m * (n * p)
+*-assoc′ 0 n p = refl
+*-assoc′ (suc m) n p rewrite *-distrib-+′ n (m * n) p rewrite *-assoc′ m n p rewrite *-distrib-+′ 1 m (n * p) = refl
 ```
 
 
@@ -931,6 +939,20 @@ you will need to formulate and prove suitable lemmas.
 
 ```agda
 -- Your code goes here
+*-zero′ : ∀ (m : ℕ) -> m * 0 ≡ 0
+*-zero′ 0 = refl
+*-zero′ (suc m) rewrite *-zero′ m = refl
+
+lemma1 : ∀ (m n p : ℕ) -> m + (n + p) ≡ n + (m + p)
+lemma1 m n p rewrite +-comm′ m (n + p) rewrite +-assoc′ n p m rewrite +-comm′ p m = refl
+
+lemma2 : ∀ (m n : ℕ) -> m * (suc n) ≡ m + m * n
+lemma2 0 n = refl
+lemma2 (suc m) n rewrite lemma2 m n rewrite lemma1 n m (m * n) = refl
+
+*-comm′ : ∀ (m n : ℕ) -> m * n ≡ n * m
+*-comm′ 0 n rewrite *-zero′ n = refl
+*-comm′ (suc m) n rewrite *-distrib-+′ m 1 n rewrite *-comm′ m n rewrite +-comm′ (n * m) n rewrite lemma2 n m = refl
 ```
 
 
@@ -944,6 +966,9 @@ for all naturals `n`. Did your proof require induction?
 
 ```agda
 -- Your code goes here
+zero-′ : ∀ (m : ℕ) -> zero ∸ m ≡ zero
+zero-′ zero = refl
+zero-′ (suc n) = refl
 ```
 
 
@@ -957,6 +982,10 @@ for all naturals `m`, `n`, and `p`.
 
 ```agda
 -- Your code goes here
+∸-+-assoc′ : ∀ (m n p : ℕ) -> m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc′ zero n p rewrite zero-′ n rewrite zero-′ p rewrite zero-′ (n + p) = refl
+∸-+-assoc′ m zero p = refl
+∸-+-assoc′ (suc m) (suc n) p rewrite ∸-+-assoc′ m n p = refl
 ```
 
 
@@ -970,8 +999,18 @@ Show the following three laws
 
 for all `m`, `n`, and `p`.
 
-```
+```agda
 -- Your code goes here
+^-distribˡ-+-* : ∀ (m n p : ℕ) -> m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-+-* m 0 p rewrite +-comm′ zero p rewrite +-identityʳ p rewrite +-identityʳ (m ^ p) = refl
+^-distribˡ-+-* m (suc n) p rewrite ^-distribˡ-+-* m n p rewrite *-assoc′ m (m ^ n) (m ^ p) = refl
+
+lemma3 : ∀ (m n p q : ℕ) -> m * n * (p * q) ≡ (m * p) * (n * q)
+lemma3 m n p q rewrite *-assoc′ m n (p * q) rewrite *-comm′ n (p * q) rewrite *-assoc′ p q n rewrite *-assoc′ m p (q * n) rewrite *-comm′ q n rewrite *-assoc′ m p (n * q) = refl
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ m ^ p * n ^ p
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p) rewrite ^-distribʳ-* m n p rewrite lemma3 m n (m ^ p) (n ^ p) = refl
 ```
 
 
@@ -997,6 +1036,35 @@ For each law: if it holds, prove; if not, give a counterexample.
 
 ```agda
 -- Your code goes here
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin -> Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (n O) = n I
+inc (n I) = (inc n) O
+
+to : ℕ -> Bin
+to 0 = ⟨⟩
+to (suc n) = inc (to n)
+
+from : Bin -> ℕ
+from ⟨⟩ = 0
+from (n O) = 2 * (from n)
+from (n I) = 2 * (from n) + 1
+
+from-inc′ : ∀ (b : Bin) -> from (inc b) ≡ suc (from b)
+from-inc′ ⟨⟩ = refl
+from-inc′ (b O) rewrite from-inc′ b rewrite +-comm′ (from b) 0 rewrite +-comm′ (from b + from b) 1 = refl
+from-inc′ (b I) rewrite from-inc′ b rewrite +-comm′ (from b) 0 rewrite +-assoc′ (from b) (from b) 1 rewrite +-comm′ (from b) 1 = refl
+
+-- to from != from to e.g. ⟨⟩ O I
+
+from-to′ : ∀ (n : ℕ) -> from (to n) ≡ n
+from-to′ zero = refl
+from-to′ (suc n) rewrite from-inc′ (to (n)) rewrite from-to′ n = refl
 ```
 
 
@@ -1021,3 +1089,4 @@ This chapter uses the following unicode:
 Similar to `\r`, the command `\^r` gives access to a variety of
 superscript rightward arrows, and also a superscript letter `r`.
 The command `\'` gives access to a range of primes (`′ ″ ‴ ⁗`).
+ 
