@@ -553,6 +553,25 @@ Show that multiplication is monotonic with regard to inequality.
 
 ```agda
 -- Your code goes here
+*-monoʳ-≤ : ∀ (n p q : ℕ)
+  → p ≤ q
+    -------------
+  → n * p ≤ n * q
+*-monoʳ-≤ zero    p q p≤q  =  z≤n
+*-monoʳ-≤ (suc n) p q p≤q = +-mono-≤ p q (n * p) (n * q) p≤q (*-monoʳ-≤ n p q p≤q)
+
+*-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+    -------------
+  → m * p ≤ n * p
+*-monoˡ-≤ m n p m≤n rewrite *-comm m p | *-comm n p = *-monoʳ-≤ p m n m≤n
+
+*-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m * p ≤ n * q
+*-mono-≤ m n p q m≤n p≤q = ≤-trans (*-monoˡ-≤ m n p m≤n) (*-monoʳ-≤ n p q p≤q)
 ```
 
 
@@ -619,6 +638,13 @@ similar to that used for totality.
 
 ```agda
 -- Your code goes here
+<-trans : ∀ {m n p : ℕ}
+  -> m < n
+  -> n < p
+     -------------
+  -> m < p
+<-trans z<s       (s<s n<p) = z<s
+<-trans (s<s m<n) (s<s n<p) = s<s (<-trans m<n n<p)
 ```
 
 #### Exercise `+-mono-<` (practice) {#plus-mono-less}
@@ -628,6 +654,25 @@ As with inequality, some additional definitions may be required.
 
 ```agda
 -- Your code goes here
++-mono-r-< : ∀ (p m n : ℕ)
+  -> m < n
+  ------------------------
+  -> p + m < p + n
++-mono-r-< zero m n m<n = m<n
++-mono-r-< (suc p) m n m<n = s<s (+-mono-r-< p m n m<n)
+
++-mono-l-< : ∀ (m n p : ℕ)
+  -> m < n
+  ------------------------
+  -> m + p < n + p
++-mono-l-< m n p m<n rewrite +-comm m p | +-comm n p = +-mono-r-< p m n m<n
+
++-mono-< : ∀ (m n p q : ℕ)
+  -> m < n
+  -> p < q
+  ------------------------
+  -> m + p < n + q
++-mono-< m n p q m<n p<q = <-trans (+-mono-l-< m n p m<n) (+-mono-r-< n p q p<q)
 ```
 
 #### Exercise `≤→<, <→≤` (recommended) {#leq-iff-less}
@@ -636,6 +681,22 @@ Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```agda
 -- Your code goes here
+lemma : ∀ {m n p : ℕ}
+  -> m < n
+  -> n ≤ p
+    ------------
+  -> m < p
+lemma z<s (s≤s n≤p) = z<s 
+lemma (s<s m<n) (s≤s n≤p) = s<s (lemma m<n n≤p)
+
+lemma2 : ∀ (m : ℕ)
+    -------------
+  -> m < suc m
+lemma2 zero = z<s
+lemma2 (suc m) = s<s (lemma2 m)
+
+≤→< : ∀ (m n : ℕ) → suc m ≤ n → m < n
+≤→< m n sm≤n = lemma (lemma2 m) sm≤n
 ```
 
 #### Exercise `<-trans-revisited` (practice) {#less-trans-revisited}
@@ -753,6 +814,21 @@ Show that the sum of two odd numbers is even.
 
 ```agda
 -- Your code goes here
+e+o≡o : ∀ {m n : ℕ}
+  → even m
+  → odd n
+    -----------
+  → odd (m + n)
+
+o+o≡e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+    -----------
+  → even (m + n)
+
+e+o≡o zero     (suc en) = suc en
+e+o≡o (suc om) (suc en) = suc (o+o≡e om (suc en))
+o+o≡e (suc em) (suc en) = suc (e+o≡o em (suc en))
 ```
 
 #### Exercise `Bin-predicates` (stretch) {#Bin-predicates}
